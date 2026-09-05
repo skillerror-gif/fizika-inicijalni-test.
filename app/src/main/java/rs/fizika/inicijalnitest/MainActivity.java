@@ -2,339 +2,464 @@ package rs.fizika.inicijalnitest;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.*;
+
 import java.util.*;
 
 public class MainActivity extends Activity {
 
-    static class Question {
-        String area, text, explanation;
-        String[] answers;
-        int correct;
-        Question(String area, String text, String[] answers, int correct, String explanation) {
-            this.area = area; this.text = text; this.answers = answers;
-            this.correct = correct; this.explanation = explanation;
-        }
-    }
+    private static final int GREEN_DARK = Color.rgb(27, 94, 62);
+    private static final int GREEN = Color.rgb(46, 125, 50);
+    private static final int GREEN_MID = Color.rgb(56, 142, 60);
+    private static final int GREEN_PALE = Color.rgb(246, 250, 247);
+    private static final int TEXT = Color.rgb(31, 41, 35);
+    private static final int MUTED = Color.rgb(92, 108, 98);
 
-    private final List<Question> questions = new ArrayList<>(Arrays.asList(
-            new Question("Merenje i fizičke veličine", "Koja je osnovna SI jedinica za dužinu?", new String[]{"centimetar (cm)", "metar (m)", "kilometar (km)", "milimetar (mm)"}, 1, "Osnovna SI jedinica za dužinu je metar (m)."),
-            new Question("Merenje i fizičke veličine", "Koja je SI jedinica za vreme?", new String[]{"minut", "čas", "sekunda", "dan"}, 2, "Osnovna SI jedinica za vreme je sekunda (s)."),
-            new Question("Merenje i fizičke veličine", "Koliko je 2,5 km izraženo u metrima?", new String[]{"25 m", "250 m", "2500 m", "25 000 m"}, 2, "1 km = 1000 m, pa je 2,5 km = 2500 m."),
-            new Question("Kretanje", "Automobil pređe 150 m za 10 s. Kolika je srednja brzina?", new String[]{"15 m/s", "1500 m/s", "0,067 m/s", "140 m/s"}, 0, "v = s/t = 150 m / 10 s = 15 m/s."),
-            new Question("Kretanje", "Telo se kreće ravnomerno pravolinijski. Koja veličina je konstantna?", new String[]{"brzina", "pređeni put", "položaj", "ubrzanje različito od nule"}, 0, "Kod ravnomernog pravolinijskog kretanja brzina je konstantna."),
-            new Question("Kretanje", "Biciklista se kreće brzinom 5 m/s tokom 20 s. Koliki put pređe?", new String[]{"4 m", "25 m", "100 m", "400 m"}, 2, "s = v·t = 5 m/s · 20 s = 100 m."),
-            new Question("Kretanje", "Ako se brzina tela povećava za jednake iznose u jednakim vremenskim intervalima, kretanje je:", new String[]{"ravnomerno", "ravnomerno ubrzano", "kružno ravnomerno", "oscilatorno"}, 1, "To je karakteristika ravnomerno ubrzanog kretanja."),
-            new Question("Sila", "Koja je SI jedinica za silu?", new String[]{"džul (J)", "vat (W)", "njutn (N)", "paskal (Pa)"}, 2, "Sila se meri u njutnima (N)."),
-            new Question("Sila", "Ako na telo deluju dve jednake sile suprotnih smerova, rezultanta je:", new String[]{"dvostruko veća sila", "jednaka nuli", "jednaka jednoj sili", "uvek vertikalna"}, 1, "Jednake sile suprotnih smerova se poništavaju."),
-            new Question("Sila", "Masa tela je 2 kg. Ako uzmemo g ≈ 10 N/kg, sila teže je:", new String[]{"0,2 N", "5 N", "12 N", "20 N"}, 3, "Fg = m·g = 2 kg · 10 N/kg = 20 N."),
-            new Question("Sila", "Koja sila se suprotstavlja klizanju jednog tela po drugom?", new String[]{"sila teže", "sila trenja", "električna sila", "magnetna sila"}, 1, "Sila trenja deluje suprotno relativnom kretanju dodirnih površina."),
-            new Question("Pritisak", "Pritisak se računa formulom:", new String[]{"p = F/S", "p = F·S", "p = S/F", "p = m·g"}, 0, "Pritisak je količnik normalne sile i površine: p = F/S."),
-            new Question("Pritisak", "Kako se menja pritisak ako ista sila deluje na dva puta manju površinu?", new String[]{"smanji se dva puta", "ne menja se", "poveća se dva puta", "postaje nula"}, 2, "Pošto je p = F/S, prepolovljena površina daje dvostruki pritisak."),
-            new Question("Rad, energija i snaga", "Mehanički rad sile koja deluje u smeru pomeranja računa se kao:", new String[]{"A = F/s", "A = F·s", "A = m·g", "A = P/t"}, 1, "Kada su sila i pomeranje istog pravca i smera, A = F·s."),
-            new Question("Rad, energija i snaga", "Koju energiju ima podignuto telo zbog svog položaja?", new String[]{"kinetičku", "električnu", "gravitacionu potencijalnu", "unutrašnju"}, 2, "Podignuto telo ima gravitacionu potencijalnu energiju."),
-            new Question("Rad, energija i snaga", "Koju energiju ima telo koje se kreće?", new String[]{"kinetičku", "potencijalnu samo", "hemijsku", "nema energiju"}, 0, "Kretanje je povezano sa kinetičkom energijom."),
-            new Question("Rad, energija i snaga", "Snaga predstavlja:", new String[]{"rad izvršen u jedinici vremena", "silu po jedinici površine", "put u jedinici vremena", "masu u jedinici zapremine"}, 0, "P = A/t, pa snaga pokazuje koliko se rada izvrši u jedinici vremena."),
-            new Question("Rad, energija i snaga", "Koja je SI jedinica za rad i energiju?", new String[]{"njutn", "vat", "džul", "paskal"}, 2, "Rad i energija mere se u džulima (J)."),
-            new Question("Toplota", "Pri zagrevanju većine čvrstih tela njihove dimenzije se:", new String[]{"povećavaju", "smanjuju", "ne menjaju", "uvek prepolove"}, 0, "Većina tela se pri zagrevanju toplotno širi."),
-            new Question("Toplota", "Prenošenje toplote kroz čvrsto telo bez kretanja materije naziva se:", new String[]{"konvekcija", "zračenje", "provođenje", "isparavanje"}, 2, "Provođenje je prenos toplote kroz materijal bez makroskopskog prenosa materije."),
-            new Question("Toplota", "Temperatura je mera:", new String[]{"količine materije", "stepena zagrejanosti tela", "mase tela", "električnog naboja"}, 1, "Temperatura opisuje stepen zagrejanosti tela."),
-            new Question("Elektricitet", "Koja je SI jedinica za jačinu električne struje?", new String[]{"volt", "amper", "om", "kulon"}, 1, "Jačina električne struje meri se amperima (A)."),
-            new Question("Elektricitet", "Za provodnik važi U = 12 V i I = 3 A. Koliki je otpor?", new String[]{"4 Ω", "9 Ω", "15 Ω", "36 Ω"}, 0, "R = U/I = 12 V / 3 A = 4 Ω."),
-            new Question("Elektricitet", "Koja je SI jedinica za električni napon?", new String[]{"volt", "amper", "vat", "om"}, 0, "Električni napon meri se voltima (V)."),
-            new Question("Elektricitet", "U rednoj vezi električnih potrošača jačina struje je:", new String[]{"ista kroz sve potrošače", "uvek nula", "najveća na prvom potrošaču", "različita bez pravila"}, 0, "Kod redne veze ista struja prolazi kroz sve elemente kola."),
-            new Question("Magnetizam", "Koji polovi magneta se privlače?", new String[]{"dva severna", "dva južna", "raznoimeni", "nijedni"}, 2, "Raznoimeni polovi se privlače, a istoimeni odbijaju."),
-            new Question("Optika", "Kod ravnog ogledala lik predmeta je:", new String[]{"realan i obrnut", "virtuelan, uspravan i jednake veličine", "uvek umanjen", "uvek uvećan"}, 1, "Ravno ogledalo daje virtuelan, uspravan lik jednake veličine."),
-            new Question("Optika", "Pri prelasku svetlosti iz jednog optičkog sredstva u drugo može doći do:", new String[]{"prelamanja", "nestanka mase", "povećanja gravitacije", "stvaranja zvuka"}, 0, "Promena brzine svetlosti na granici sredstava dovodi do prelamanja."),
-            new Question("Talasi i zvuk", "Od čega prvenstveno zavisi visina tona?", new String[]{"od amplitude", "od frekvencije", "od mase slušaoca", "od temperature tela koje sluša"}, 1, "Veća frekvencija odgovara višem tonu."),
-            new Question("Talasi i zvuk", "Zvuk se kroz vakuum:", new String[]{"širi veoma brzo", "širi sporije nego kroz vazduh", "ne može širiti", "širi samo noću"}, 2, "Zvuku je za prostiranje potrebna materijalna sredina.")
-    ));
+    private final Handler timerHandler = new Handler();
+    private long startedAt = 0L;
+    private boolean timerRunning = false;
 
-    private LinearLayout root, resultBox;
-    private TextView progressText, areaText, questionText, scoreText, feedbackText, resultText, weakText;
+    private List<Question> questions = new ArrayList<>();
+    private int index = 0;
+    private int score = 0;
+    private boolean checked = false;
+    private final Map<String, Integer> errorsByArea = new LinkedHashMap<>();
+
+    private LinearLayout content;
+    private TextView progressText, areaText, questionText, scoreText, feedbackText, timerText;
     private ProgressBar progressBar;
     private RadioGroup radioGroup;
-    private Button checkButton, nextButton, restartButton;
-    private int index = 0, score = 0;
-    private boolean checked = false;
-    private final Map<String,Integer> errorsByArea = new HashMap<>();
+    private Button checkButton, nextButton;
 
-    @Override public void onCreate(Bundle state) {
+    @Override
+    public void onCreate(Bundle state) {
         super.onCreate(state);
-        Collections.shuffle(questions);
-        buildUi();
-        showQuestion();
+        getWindow().setStatusBarColor(GREEN_DARK);
+        getWindow().setNavigationBarColor(GREEN_PALE);
+        showStartScreen();
     }
 
-    private int dp(int v) {
-        return (int)(v * getResources().getDisplayMetrics().density + 0.5f);
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
     }
 
-    private GradientDrawable bg(int color, float radiusDp) {
+    private GradientDrawable rounded(int fill, int stroke, float radius, int strokeWidth) {
         GradientDrawable d = new GradientDrawable();
-        d.setColor(color);
-        d.setCornerRadius(dp((int)radiusDp));
+        d.setColor(fill);
+        d.setCornerRadius(dp((int) radius));
+        if (strokeWidth > 0) d.setStroke(dp(strokeWidth), stroke);
         return d;
     }
 
-    private TextView text(String value, int sp, int color) {
+    private TextView txt(String value, int sp, int color) {
         TextView t = new TextView(this);
         t.setText(value);
         t.setTextSize(sp);
         t.setTextColor(color);
-        t.setLineSpacing(0,1.12f);
+        t.setLineSpacing(0, 1.12f);
         return t;
     }
 
-    private void buildUi() {
+    private TextView centerTxt(String value, int sp, int color) {
+        TextView t = txt(value, sp, color);
+        t.setGravity(Gravity.CENTER);
+        return t;
+    }
+
+    private Button greenButton(String label) {
+        Button b = new Button(this);
+        b.setText(label);
+        b.setTextSize(16);
+        b.setTextColor(Color.WHITE);
+        b.setAllCaps(false);
+        b.setTypeface(null, Typeface.BOLD);
+        b.setBackground(rounded(GREEN, GREEN, 14, 0));
+        b.setPadding(dp(14), 0, dp(14), 0);
+        return b;
+    }
+
+    private void showStartScreen() {
+        stopTimer();
+
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
 
-        root = new LinearLayout(this);
+        LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(18),dp(18),dp(18),dp(28));
-        root.setBackgroundColor(Color.rgb(248,250,249));
+        root.setGravity(Gravity.CENTER_HORIZONTAL);
+        root.setPadding(dp(22), dp(24), dp(22), dp(28));
+        root.setBackgroundColor(GREEN_PALE);
         scroll.addView(root);
 
-        TextView title = text("Fizika – inicijalni test", 26, Color.rgb(32,92,67));
+        ImageView hero = new ImageView(this);
+        hero.setImageResource(R.drawable.hero_fizika1);
+        hero.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        hero.setContentDescription("Ilustracija fizike");
+        root.addView(hero, new LinearLayout.LayoutParams(dp(205), dp(205)));
+
+        TextView title = centerTxt("Fizika 1", 31, GREEN_DARK);
         title.setTypeface(null, Typeface.BOLD);
-        root.addView(title);
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-1, -2);
+        tp.setMargins(0, dp(16), 0, 0);
+        root.addView(title, tp);
 
-        TextView subtitle = text("Ponavljanje gradiva osnovne škole", 15, Color.rgb(94,107,101));
-        subtitle.setPadding(0,dp(4),0,dp(16));
-        root.addView(subtitle);
+        TextView sub = centerTxt("Inicijalni test", 21, GREEN_MID);
+        sub.setTypeface(null, Typeface.BOLD);
+        root.addView(sub);
 
-        LinearLayout topRow = new LinearLayout(this);
-        topRow.setOrientation(LinearLayout.HORIZONTAL);
-        topRow.setGravity(Gravity.CENTER_VERTICAL);
+        TextView intro = centerTxt("20 nasumično izabranih pitanja iz gradiva 7. i 8. razreda", 15, MUTED);
+        LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(-1, -2);
+        ip.setMargins(dp(8), dp(10), dp(8), dp(18));
+        root.addView(intro, ip);
 
-        progressText = text("",14,Color.rgb(94,107,101));
-        scoreText = text("",14,Color.rgb(30,42,36));
-        scoreText.setTypeface(null,Typeface.BOLD);
+        Button start = greenButton("Počni test  →");
+        start.setOnClickListener(v -> startTest());
+        root.addView(start, new LinearLayout.LayoutParams(-1, dp(56)));
 
-        topRow.addView(progressText,new LinearLayout.LayoutParams(0,dp(40),1));
-        topRow.addView(scoreText);
-        root.addView(topRow);
+        LinearLayout quoteCard = new LinearLayout(this);
+        quoteCard.setOrientation(LinearLayout.VERTICAL);
+        quoteCard.setPadding(dp(18), dp(16), dp(18), dp(14));
+        quoteCard.setBackground(rounded(Color.WHITE, Color.rgb(200, 230, 201), 18, 1));
+        quoteCard.setElevation(dp(2));
 
-        progressBar = new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
-        progressBar.setMax(questions.size());
-        root.addView(progressBar,new LinearLayout.LayoutParams(-1,dp(12)));
+        TextView quote = txt("„Mene čudnom snagom beskonačnost privlači i želim da dograbim celu vasionu…“", 15, TEXT);
+        quote.setTypeface(Typeface.create(Typeface.SERIF, Typeface.ITALIC));
+        quoteCard.addView(quote);
 
-        areaText = text("",15,Color.rgb(46,125,90));
-        areaText.setTypeface(null,Typeface.BOLD);
-        areaText.setPadding(0,dp(18),0,dp(6));
-        root.addView(areaText);
+        TextView author = txt("Milutin Milanković", 13, GREEN_DARK);
+        author.setTypeface(null, Typeface.BOLD);
+        author.setGravity(Gravity.END);
+        author.setPadding(0, dp(8), 0, 0);
+        quoteCard.addView(author);
 
-        questionText = text("",20,Color.rgb(30,42,36));
-        questionText.setTypeface(null,Typeface.BOLD);
-        questionText.setPadding(0,0,0,dp(14));
-        root.addView(questionText);
+        LinearLayout.LayoutParams qp = new LinearLayout.LayoutParams(-1, -2);
+        qp.setMargins(0, dp(18), 0, 0);
+        root.addView(quoteCard, qp);
 
-        radioGroup = new RadioGroup(this);
-        radioGroup.setOrientation(RadioGroup.VERTICAL);
-        root.addView(radioGroup,new LinearLayout.LayoutParams(-1,-2));
-
-        feedbackText = text("",15,Color.rgb(30,42,36));
-        feedbackText.setPadding(dp(14),dp(12),dp(14),dp(12));
-        feedbackText.setVisibility(View.GONE);
-
-        LinearLayout.LayoutParams fbp = new LinearLayout.LayoutParams(-1,-2);
-        fbp.setMargins(0,dp(14),0,0);
-        root.addView(feedbackText,fbp);
-
-        LinearLayout actions = new LinearLayout(this);
-        actions.setOrientation(LinearLayout.HORIZONTAL);
-        actions.setPadding(0,dp(16),0,0);
-
-        checkButton = new Button(this);
-        checkButton.setText("Proveri odgovor");
-        checkButton.setTextColor(Color.WHITE);
-        checkButton.setBackground(bg(Color.rgb(46,125,90),10));
-        checkButton.setOnClickListener(v -> checkAnswer());
-        actions.addView(checkButton,new LinearLayout.LayoutParams(0,dp(52),1));
-
-        nextButton = new Button(this);
-        nextButton.setText("Sledeće pitanje");
-        nextButton.setVisibility(View.GONE);
-        nextButton.setOnClickListener(v -> nextQuestion());
-
-        LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(0,dp(52),1);
-        np.setMargins(dp(10),0,0,0);
-        actions.addView(nextButton,np);
-        root.addView(actions);
-
-        resultBox = new LinearLayout(this);
-        resultBox.setOrientation(LinearLayout.VERTICAL);
-        resultBox.setPadding(dp(18),dp(18),dp(18),dp(18));
-        resultBox.setBackground(bg(Color.WHITE,14));
-        resultBox.setVisibility(View.GONE);
-
-        resultText = text("",24,Color.rgb(32,92,67));
-        resultText.setTypeface(null,Typeface.BOLD);
-        resultBox.addView(resultText);
-
-        weakText = text("",15,Color.rgb(30,42,36));
-        weakText.setPadding(0,dp(12),0,dp(16));
-        resultBox.addView(weakText);
-
-        restartButton = new Button(this);
-        restartButton.setText("Ponovi kviz");
-        restartButton.setTextColor(Color.WHITE);
-        restartButton.setBackground(bg(Color.rgb(46,125,90),10));
-        restartButton.setOnClickListener(v -> restart());
-        resultBox.addView(restartButton,new LinearLayout.LayoutParams(-1,dp(52)));
-
-        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1,-2);
-        rp.setMargins(0,dp(18),0,0);
-        root.addView(resultBox,rp);
+        TextView note = centerTxt("Srećno! Pažljivo pročitaj svako pitanje.", 13, MUTED);
+        LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(-1, -2);
+        np.setMargins(0, dp(16), 0, 0);
+        root.addView(note, np);
 
         setContentView(scroll);
     }
 
-    private void showQuestion() {
+    private void startTest() {
+        questions = TestBuilder.buildTest20();
+        index = 0;
+        score = 0;
         checked = false;
+        errorsByArea.clear();
+        startedAt = System.currentTimeMillis();
+        timerRunning = true;
+        buildTestUi();
+        showQuestion();
+        timerHandler.post(timerTick);
+    }
 
-        Question q = questions.get(index);
-        progressText.setText("Pitanje " + (index+1) + " od " + questions.size());
-        scoreText.setText(score + " bodova");
-        progressBar.setProgress(index+1);
-        areaText.setText(q.area);
-        questionText.setText(q.text);
-        radioGroup.removeAllViews();
+    private void buildTestUi() {
+        LinearLayout page = new LinearLayout(this);
+        page.setOrientation(LinearLayout.VERTICAL);
+        page.setBackgroundColor(GREEN_PALE);
 
-        for (int i=0;i<q.answers.length;i++) {
-            RadioButton rb = new RadioButton(this);
-            rb.setId(1000+i);
-            rb.setText(q.answers[i]);
-            rb.setTextSize(17);
-            rb.setTextColor(Color.rgb(30,42,36));
-            rb.setPadding(dp(8),dp(8),dp(8),dp(8));
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
 
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,-2);
-            lp.setMargins(0,0,0,dp(6));
-            radioGroup.addView(rb,lp);
+        content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(18), dp(18), dp(18), dp(24));
+        scroll.addView(content);
+
+        page.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
+
+        TextView title = txt("Fizika 1 – inicijalni test", 23, GREEN_DARK);
+        title.setTypeface(null, Typeface.BOLD);
+        content.addView(title);
+
+        TextView subtitle = txt("Gradivo 7. i 8. razreda", 14, MUTED);
+        subtitle.setPadding(0, dp(3), 0, dp(12));
+        content.addView(subtitle);
+
+        LinearLayout top = new LinearLayout(this);
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+
+        progressText = txt("", 14, MUTED);
+        scoreText = txt("", 14, TEXT);
+        scoreText.setTypeface(null, Typeface.BOLD);
+        top.addView(progressText, new LinearLayout.LayoutParams(0, dp(36), 1f));
+        top.addView(scoreText);
+        content.addView(top);
+
+        progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        progressBar.setMax(20);
+        progressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(GREEN));
+        content.addView(progressBar, new LinearLayout.LayoutParams(-1, dp(10)));
+
+        areaText = txt("", 14, GREEN_MID);
+        areaText.setTypeface(null, Typeface.BOLD);
+        areaText.setPadding(0, dp(17), 0, dp(6));
+        content.addView(areaText);
+
+        questionText = txt("", 20, TEXT);
+        questionText.setTypeface(null, Typeface.BOLD);
+        questionText.setPadding(0, 0, 0, dp(12));
+        content.addView(questionText);
+
+        radioGroup = new RadioGroup(this);
+        radioGroup.setOrientation(RadioGroup.VERTICAL);
+        content.addView(radioGroup);
+
+        feedbackText = txt("", 15, TEXT);
+        feedbackText.setPadding(dp(14), dp(12), dp(14), dp(12));
+        feedbackText.setVisibility(View.GONE);
+        LinearLayout.LayoutParams fbp = new LinearLayout.LayoutParams(-1, -2);
+        fbp.setMargins(0, dp(14), 0, 0);
+        content.addView(feedbackText, fbp);
+
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setPadding(0, dp(16), 0, 0);
+
+        checkButton = greenButton("Proveri odgovor");
+        checkButton.setOnClickListener(v -> checkAnswer());
+        actions.addView(checkButton, new LinearLayout.LayoutParams(0, dp(52), 1f));
+
+        nextButton = new Button(this);
+        nextButton.setText("Sledeće pitanje");
+        nextButton.setTextSize(15);
+        nextButton.setAllCaps(false);
+        nextButton.setTextColor(GREEN_DARK);
+        nextButton.setTypeface(null, Typeface.BOLD);
+        nextButton.setBackground(rounded(Color.WHITE, Color.rgb(165, 214, 167), 14, 1));
+        nextButton.setVisibility(View.GONE);
+        nextButton.setOnClickListener(v -> nextQuestion());
+
+        LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(0, dp(52), 1f);
+        nlp.setMargins(dp(10), 0, 0, 0);
+        actions.addView(nextButton, nlp);
+        content.addView(actions);
+
+        LinearLayout timerBar = new LinearLayout(this);
+        timerBar.setGravity(Gravity.CENTER);
+        timerBar.setPadding(dp(12), dp(10), dp(12), dp(10));
+        timerBar.setBackgroundColor(Color.WHITE);
+        timerText = centerTxt("Vreme: 00:00", 15, GREEN_DARK);
+        timerText.setTypeface(null, Typeface.BOLD);
+        timerBar.addView(timerText);
+        page.addView(timerBar, new LinearLayout.LayoutParams(-1, dp(48)));
+
+        setContentView(page);
+    }
+
+    private RadioButton optionButton(String value, int id) {
+        RadioButton rb = new RadioButton(this);
+        rb.setId(id);
+        rb.setText(value);
+        rb.setTextSize(16);
+        rb.setTextColor(TEXT);
+        rb.setButtonTintList(android.content.res.ColorStateList.valueOf(GREEN));
+        rb.setPadding(dp(8), dp(8), dp(8), dp(8));
+        rb.setBackground(rounded(Color.WHITE, Color.rgb(220, 230, 223), 12, 1));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+        lp.setMargins(0, dp(5), 0, dp(5));
+        rb.setLayoutParams(lp);
+        return rb;
+    }
+
+    private void showQuestion() {
+        if (index >= questions.size()) {
+            showResults();
+            return;
         }
 
+        checked = false;
+        Question q = questions.get(index);
+
+        progressText.setText("Pitanje " + (index + 1) + " od " + questions.size());
+        scoreText.setText("Tačno: " + score);
+        progressBar.setProgress(index + 1);
+
+        String badge = q.calculation
+                ? q.area + "  •  računski – " + ("OSNOVNI".equals(q.level) ? "osnovni nivo" : "srednji nivo")
+                : q.area;
+        areaText.setText(badge);
+        questionText.setText(q.text);
+
+        radioGroup.removeAllViews();
+        for (int i = 0; i < q.answers.length; i++) {
+            radioGroup.addView(optionButton(q.answers[i], 1000 + i));
+        }
+
+        feedbackText.setText("");
         feedbackText.setVisibility(View.GONE);
-        checkButton.setVisibility(View.VISIBLE);
+        checkButton.setEnabled(true);
+        checkButton.setAlpha(1f);
         nextButton.setVisibility(View.GONE);
     }
 
     private void checkAnswer() {
         if (checked) return;
-
-        int id = radioGroup.getCheckedRadioButtonId();
-
-        if (id == -1) {
-            feedbackText.setText("Izaberi jedan odgovor.");
-            feedbackText.setBackground(bg(Color.rgb(255,248,225),10));
-            feedbackText.setVisibility(View.VISIBLE);
+        int selectedId = radioGroup.getCheckedRadioButtonId();
+        if (selectedId == -1) {
+            Toast.makeText(this, "Izaberi jedan odgovor.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         checked = true;
-        int chosen = id - 1000;
+        int chosen = selectedId - 1000;
         Question q = questions.get(index);
         boolean ok = chosen == q.correct;
 
         if (ok) {
             score++;
-            feedbackText.setText("Tačno!\n\n" + q.explanation);
-            feedbackText.setBackground(bg(Color.rgb(223,244,232),10));
+            feedbackText.setText("✓ Tačno!\n" + q.explanation);
+            feedbackText.setBackground(rounded(Color.rgb(232, 245, 233), Color.rgb(129, 199, 132), 12, 1));
+            feedbackText.setTextColor(Color.rgb(27, 94, 32));
         } else {
-            errorsByArea.put(q.area, errorsByArea.getOrDefault(q.area,0)+1);
-            feedbackText.setText(
-                    "Nije tačno. Tačan odgovor: "
-                    + q.answers[q.correct]
-                    + "\n\n"
-                    + q.explanation
-            );
-            feedbackText.setBackground(bg(Color.rgb(252,229,229),10));
+            Integer old = errorsByArea.get(q.area);
+            errorsByArea.put(q.area, old == null ? 1 : old + 1);
+            feedbackText.setText("✗ Netačno. Tačan odgovor: " + q.answers[q.correct] + "\n" + q.explanation);
+            feedbackText.setBackground(rounded(Color.rgb(255, 243, 224), Color.rgb(255, 183, 77), 12, 1));
+            feedbackText.setTextColor(Color.rgb(121, 85, 72));
         }
 
-        scoreText.setText(score + " bodova");
         feedbackText.setVisibility(View.VISIBLE);
-
-        for (int i=0;i<radioGroup.getChildCount();i++) {
+        scoreText.setText("Tačno: " + score);
+        for (int i = 0; i < radioGroup.getChildCount(); i++) {
             radioGroup.getChildAt(i).setEnabled(false);
         }
-
-        checkButton.setVisibility(View.GONE);
-        nextButton.setText(
-                index == questions.size()-1
-                        ? "Prikaži rezultat"
-                        : "Sledeće pitanje"
-        );
+        checkButton.setEnabled(false);
+        checkButton.setAlpha(0.55f);
+        nextButton.setText(index == questions.size() - 1 ? "Rezultat" : "Sledeće pitanje");
         nextButton.setVisibility(View.VISIBLE);
     }
 
     private void nextQuestion() {
-        if (index < questions.size()-1) {
-            index++;
-            showQuestion();
-        } else {
-            showResult();
-        }
+        if (!checked) return;
+        index++;
+        if (index >= questions.size()) showResults();
+        else showQuestion();
     }
 
-    private void showResult() {
-        areaText.setVisibility(View.GONE);
-        questionText.setVisibility(View.GONE);
-        radioGroup.setVisibility(View.GONE);
-        feedbackText.setVisibility(View.GONE);
-        checkButton.setVisibility(View.GONE);
-        nextButton.setVisibility(View.GONE);
+    private void showResults() {
+        long elapsed = System.currentTimeMillis() - startedAt;
+        stopTimer();
 
-        int percent = (int)Math.round(score * 100.0 / questions.size());
+        int total = questions.size();
+        int percent = total == 0 ? 0 : Math.round(100f * score / total);
+        String label;
+        if (percent >= 90) label = "Odlično!";
+        else if (percent >= 75) label = "Vrlo dobro!";
+        else if (percent >= 60) label = "Dobro!";
+        else if (percent >= 45) label = "Solidno!";
+        else label = "Pokušaj ponovo!";
 
-        resultText.setText(
-                "Uspešnost: " + percent + "%\n"
-                + score + "/" + questions.size()
-                + " tačnih odgovora"
-        );
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setGravity(Gravity.CENTER_HORIZONTAL);
+        root.setPadding(dp(22), dp(30), dp(22), dp(30));
+        root.setBackgroundColor(GREEN_PALE);
+        scroll.addView(root);
 
-        if (errorsByArea.isEmpty()) {
-            weakText.setText("Odlično! Sva pitanja su tačno rešena.");
-        } else {
-            List<Map.Entry<String,Integer>> list =
-                    new ArrayList<>(errorsByArea.entrySet());
+        TextView done = centerTxt(label, 30, GREEN_DARK);
+        done.setTypeface(null, Typeface.BOLD);
+        root.addView(done);
 
-            list.sort((a,b) -> b.getValue()-a.getValue());
+        TextView pct = centerTxt(percent + "%", 48, GREEN);
+        pct.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(-1, -2);
+        pp.setMargins(0, dp(10), 0, dp(2));
+        root.addView(pct, pp);
 
-            StringBuilder sb =
-                    new StringBuilder("Oblasti za dodatno ponavljanje:\n");
+        TextView scoreView = centerTxt(score + " / " + total + " tačnih odgovora", 18, TEXT);
+        root.addView(scoreView);
 
-            for (Map.Entry<String,Integer> e : list) {
-                sb.append("• ")
-                  .append(e.getKey())
-                  .append(" — ")
-                  .append(e.getValue())
-                  .append(" grešaka\n");
+        TextView timeView = centerTxt("Vreme: " + formatTime(elapsed), 15, MUTED);
+        timeView.setPadding(0, dp(8), 0, dp(18));
+        root.addView(timeView);
+
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(16), dp(14), dp(16), dp(14));
+        card.setBackground(rounded(Color.WHITE, Color.rgb(200, 230, 201), 16, 1));
+
+        TextView head = txt("Oblasti za dodatno ponavljanje", 16, GREEN_DARK);
+        head.setTypeface(null, Typeface.BOLD);
+        card.addView(head);
+
+        TextView weak = txt(buildWeakAreas(), 14, TEXT);
+        weak.setPadding(0, dp(8), 0, 0);
+        card.addView(weak);
+        root.addView(card, new LinearLayout.LayoutParams(-1, -2));
+
+        Button again = greenButton("Uradi novi test");
+        again.setOnClickListener(v -> startTest());
+        LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(-1, dp(56));
+        alp.setMargins(0, dp(18), 0, 0);
+        root.addView(again, alp);
+
+        Button home = new Button(this);
+        home.setText("Početna");
+        home.setAllCaps(false);
+        home.setTextColor(GREEN_DARK);
+        home.setBackground(rounded(Color.WHITE, Color.rgb(165, 214, 167), 14, 1));
+        home.setOnClickListener(v -> showStartScreen());
+        LinearLayout.LayoutParams hlp = new LinearLayout.LayoutParams(-1, dp(52));
+        hlp.setMargins(0, dp(10), 0, 0);
+        root.addView(home, hlp);
+
+        setContentView(scroll);
+    }
+
+    private String buildWeakAreas() {
+        if (errorsByArea.isEmpty()) return "Nema izdvojenih slabijih oblasti — svi odgovori su tačni.";
+        List<Map.Entry<String, Integer>> entries = new ArrayList<>(errorsByArea.entrySet());
+        Collections.sort(entries, new Comparator<Map.Entry<String, Integer>>() {
+            @Override public int compare(Map.Entry<String, Integer> a, Map.Entry<String, Integer> b) {
+                return b.getValue().compareTo(a.getValue());
             }
-
-            weakText.setText(sb.toString().trim());
+        });
+        StringBuilder sb = new StringBuilder();
+        int limit = Math.min(3, entries.size());
+        for (int i = 0; i < limit; i++) {
+            if (i > 0) sb.append("\n");
+            sb.append("• ").append(entries.get(i).getKey())
+              .append(" — ").append(entries.get(i).getValue()).append(" greš.");
         }
-
-        resultBox.setVisibility(View.VISIBLE);
+        return sb.toString();
     }
 
-    private void restart() {
-        Collections.shuffle(questions);
-        index = 0;
-        score = 0;
-        checked = false;
-        errorsByArea.clear();
-
-        areaText.setVisibility(View.VISIBLE);
-        questionText.setVisibility(View.VISIBLE);
-        radioGroup.setVisibility(View.VISIBLE);
-        resultBox.setVisibility(View.GONE);
-
-        showQuestion();
+    private String formatTime(long millis) {
+        long sec = Math.max(0, millis / 1000);
+        long min = sec / 60;
+        sec %= 60;
+        return String.format(Locale.US, "%02d:%02d", min, sec);
     }
-          }
+
+    private final Runnable timerTick = new Runnable() {
+        @Override public void run() {
+            if (!timerRunning) return;
+            if (timerText != null) timerText.setText("Vreme: " + formatTime(System.currentTimeMillis() - startedAt));
+            timerHandler.postDelayed(this, 1000);
+        }
+    };
+
+    private void stopTimer() {
+        timerRunning = false;
+        timerHandler.removeCallbacks(timerTick);
+    }
+
+    @Override protected void onDestroy() {
+        stopTimer();
+        super.onDestroy();
+    }
+}
