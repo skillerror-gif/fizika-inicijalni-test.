@@ -31,8 +31,35 @@ jobs:
         run: |
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Standardizuj hero sliku
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          p = 'app/src/main/res/drawable-nodpi/fizika1_hero.jpg'
+          im = Image.open(p)
+          im.load()
+          if im.mode != 'RGB':
+              im = im.convert('RGB')
+          # Čuvamo isti prikazni mehanizam koji je radio na telefonu,
+          # ali sliku pre pakovanja ponovo kodiramo kao standardni JPEG.
+          target_w = max(1280, im.width)
+          target_h = round(target_w * im.height / im.width)
+          if im.width < target_w:
+              im = im.resize((target_w, target_h), Image.Resampling.LANCZOS)
+          im.save(p, format='JPEG', quality=94, optimize=True, progressive=False, subsampling=0)
+          print('hero:', im.size, im.mode)
+          PY
+
       - name: Proveri hero sliku
-        run: file app/src/main/res/drawable-nodpi/fizika1_hero.jpg
+        run: |
+          file app/src/main/res/drawable-nodpi/fizika1_hero.jpg
+          python3 - <<'PY'
+          from PIL import Image
+          p='app/src/main/res/drawable-nodpi/fizika1_hero.jpg'
+          im=Image.open(p); im.verify()
+          print('JPEG verified')
+          PY
 
       - name: Napravi APK
         run: gradle :app:assembleDebug --stacktrace
